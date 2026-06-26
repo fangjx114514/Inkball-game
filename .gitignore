@@ -26,3 +26,6 @@ out/
 # Local environment files
 .env
 .env.*
+
+# Local asset copies
+/Torus Regular.otf

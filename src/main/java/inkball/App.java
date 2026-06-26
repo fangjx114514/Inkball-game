@@ -1,6 +1,7 @@
 package inkball;
 
 import processing.core.PApplet;
+import processing.core.PFont;
 import processing.core.PImage;
 import processing.data.JSONArray;
 import processing.data.JSONObject;
@@ -9,6 +10,7 @@ import processing.event.MouseEvent;
 import processing.core.PVector;
 
 import javax.imageio.ImageIO;
+import java.awt.FontFormatException;
 import java.awt.image.BufferedImage;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -35,10 +37,12 @@ public class App extends PApplet {
     public static final int INITIAL_PARACHUTES = 1;
     public static final int FPS = 60;
     public static final float LEVEL_END_TICK = 0.067f;
+    public static final float SPEED_SCALE = 30.0f / FPS;
     public String configPath;
 
     //new things added
     private HashMap<String, PImage> sprites = new HashMap<>();
+    private PFont gameFont;
     List<Level> levelList;
     Map<String, Integer> scoreIncreaseMap;
     Map<String, Integer> scoreDecreaseMap;
@@ -91,6 +95,8 @@ public class App extends PApplet {
 	@Override
     public void settings() {
         size(WIDTH, HEIGHT);
+        pixelDensity(displayDensity());
+        smooth(4);
     }
 
     
@@ -107,6 +113,26 @@ public class App extends PApplet {
             sprites.put(s, result);
         }
         return result;
+    }
+
+    /**
+     * Loads bundled game font.
+     *
+     * @return loaded game font.
+     */
+    public PFont getGameFont() {
+        if (gameFont == null) {
+            try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("inkball/Torus Regular.otf")) {
+                if (inputStream == null) {
+                    throw new FileNotFoundException("inkball/Torus Regular.otf");
+                }
+                java.awt.Font font = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, inputStream).deriveFont(20.0f);
+                gameFont = new PFont(font, true);
+            } catch (FontFormatException | IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return gameFont;
     }
 
     /**
@@ -145,6 +171,7 @@ public class App extends PApplet {
 	@Override
     public void setup() {
         frameRate(FPS);
+        textFont(getGameFont());
 
         // three hashmap to move around the name easily
         colorToSprite = new HashMap<>();
@@ -599,8 +626,8 @@ public class App extends PApplet {
      */
     public void checkLineCollisions(Ball ball) {
         // Adjust the ball's future position based on its velocity
-        float futureX = ball.posX + ball.vx;
-        float futureY = ball.posY + ball.vy;
+        float futureX = ball.posX + ball.vx * SPEED_SCALE;
+        float futureY = ball.posY + ball.vy * SPEED_SCALE;
         Line lineToRemove = null;
 
         for (Line line : store_lines) {
@@ -869,7 +896,7 @@ public class App extends PApplet {
         rect(15, 15, 150, 35);
 
         if (gameEnded || currentLevelIndex >= levelList.size()) {
-            textSize(23);
+            textSize(26);
             text("=== ENDED ===", 200, 35);
             noLoop();
             return;
@@ -945,7 +972,7 @@ public class App extends PApplet {
                         calculate_score(ball);
                         i--; // Adjust index after removal
                     } else {
-                        ball.update_position(board, yOffset, this);
+                        ball.update_position(board, yOffset, this, SPEED_SCALE);
                         checkLineCollisions(ball);
                         ball.draw(this, yOffset);
                     }
@@ -954,7 +981,7 @@ public class App extends PApplet {
         }
 
         else {
-            textSize(23);
+            textSize(26);
             text("*** PAUSED ***", 200, 35);
             for (Ball ball : activeBalls) {
                 ball.draw(this, yOffset);
@@ -977,23 +1004,23 @@ public class App extends PApplet {
 
         drawLevelEndTiles();
 
-        textSize(20);
+        textSize(23);
         text("Time: " + (int)remaining_time, 450, 23);
         text("Score: " + currentScore, 450, 43);
-        textSize(17);
+        textSize(20);
         String formattedTime = String.format("%.1f", remaining_time2);
         text(formattedTime, 175, 50);
 
 		
         if (timesUp) {
-            textSize(23);
+            textSize(26);
             text("=== TIME'S UP ===", 200, 35);
             noLoop();
             return;
         }
 
         if (gameEnded) {
-            textSize(23);
+            textSize(26);
             text("=== ENDED ===", 200, 35);
             noLoop();
             return;

@@ -78,9 +78,21 @@ public class Ball extends Tile {
      * @param app    main app instance.
      */
     public void update_position(Tile[][] grid, int yOffset, App app) {
-        posX += vx;
-        posY += vy;
-        attraction_to_ball(grid, yOffset);
+        update_position(grid, yOffset, app, 30.0f / App.FPS);
+    }
+
+    /**
+     * Updates position with speed scale.
+     *
+     * @param grid   game grid.
+     * @param yOffset offset.
+     * @param app    main app instance.
+     * @param speedScale movement scale.
+     */
+    public void update_position(Tile[][] grid, int yOffset, App app, float speedScale) {
+        posX += vx * speedScale;
+        posY += vy * speedScale;
+        attraction_to_ball(grid, yOffset, speedScale);
         check_collision(grid, yOffset, app);
         
         boolean is_captured = check_hole_collision(grid, yOffset);
@@ -276,7 +288,7 @@ public class Ball extends Tile {
         return false; // No collision with any hole
     }
 
-    private void attraction_to_ball(Tile[][] grid, int yOffset) {
+    private void attraction_to_ball(Tile[][] grid, int yOffset, float speedScale) {
         // Loop through the grid to find holes
         for (int row = 0; row < grid.length; row++) {
             for (int col = 0; col < grid[row].length; col++) {
@@ -307,8 +319,8 @@ public class Ball extends Tile {
                         float ay = ny * 0.15f;
 
                         // Apply the acceleration
-                        vx += ax;
-                        vy += ay;
+                        vx += ax * speedScale;
+                        vy += ay * speedScale;
                     }
                 }
             }
