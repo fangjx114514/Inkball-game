@@ -1,6 +1,6 @@
 # Inkball
 
-Draws temporary lines to guide moving balls into matching holes while avoiding incorrect captures.
+A Java/Processing arcade puzzle game about redirecting bouncing balls into the right holes before time runs out.
 
 ## Features
 
@@ -52,6 +52,8 @@ The HTML report is generated under `build/reports/jacoco/test/html/`.
 - Pause/resume: space
 - Restart: `R`
 
-## Notes
+## Notice
 
-This project was originally built as a first-year university assignment and later cleaned up for GitHub release.
+This project was originally completed for the University of Sydney INFO1113 "Inkball" assignment and is shared after the teaching period ended.
+
+Course materials and assets may belong to the University of Sydney and/or course staff and are not licensed for reuse. Do not copy this project for coursework submission.

@@ -8,6 +8,7 @@ out/
 *.jar
 *.war
 *.ear
+*.app/
 
 # macOS and editor metadata
 .DS_Store
@@ -20,6 +21,7 @@ out/
 *.tmp
 *.swp
 *.swo
+*.zip
 
 # Local environment files
 .env

@@ -8,6 +8,8 @@ import processing.event.KeyEvent;
 import processing.event.MouseEvent;
 import processing.core.PVector;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -31,7 +33,7 @@ public class App extends PApplet {
     public static final int BOARD_WIDTH = WIDTH/CELLSIZE;
     public static final int BOARD_HEIGHT = 20;
     public static final int INITIAL_PARACHUTES = 1;
-    public static final int FPS = 30;
+    public static final int FPS = 60;
     public static final float LEVEL_END_TICK = 0.067f;
     public String configPath;
 
@@ -101,14 +103,36 @@ public class App extends PApplet {
     public PImage getSprite(String s) {
         PImage result = sprites.get(s);
         if (result == null) {
-            try {
-                result = loadImage(URLDecoder.decode(this.getClass().getResource(s+".png").getPath(), StandardCharsets.UTF_8.name()));
-            } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException(e);
-            }
+            result = loadSpriteFromResource(s);
             sprites.put(s, result);
         }
         return result;
+    }
+
+    /**
+     * Loads bundled sprite image.
+     *
+     * @param s sprite name.
+     * @return loaded sprite image.
+     */
+    private PImage loadSpriteFromResource(String s) {
+        String resourcePath = "inkball/" + s + ".png";
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
+            if (inputStream != null) {
+                BufferedImage image = ImageIO.read(inputStream);
+                PImage sprite = new PImage(image);
+                sprite.parent = this;
+                return sprite;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
+            return loadImage(URLDecoder.decode(this.getClass().getResource(s + ".png").getPath(), StandardCharsets.UTF_8.name()));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public int getScore() { // helper method for testing
@@ -167,7 +191,7 @@ public class App extends PApplet {
         levelEndAnimation.reset();
         levelEnded = false;
         gameEnded = false;
-		JSONObject jsonFile = loadJSONObject(configPath);
+		JSONObject jsonFile = loadConfigJson(configPath);
         JSONArray levelsArray = jsonFile.getJSONArray("levels");
 
         for (int i = 0; i < levelsArray.size(); i++) {
@@ -256,11 +280,16 @@ public class App extends PApplet {
     }
 
     
+    /**
+     * Loads map grid from file.
+     *
+     * @param layoutFilename level layout filename.
+     * @return loaded tile grid.
+     */
     public Tile[][] loadMapGrid(String layoutFilename) {
-
         List<String> lines = new ArrayList<>();
 
-        try (BufferedReader br = new BufferedReader(new FileReader(layoutFilename))) {
+        try (BufferedReader br = openTextFile(layoutFilename)) {
             String line;
             while ((line = br.readLine()) != null) {
                 lines.add(line);
@@ -335,6 +364,41 @@ public class App extends PApplet {
             }
         }
         return grid;
+    }
+
+    /**
+     * Loads config JSON.
+     *
+     * @param filename config filename.
+     * @return loaded JSON object.
+     */
+    public JSONObject loadConfigJson(String filename) {
+        try (BufferedReader br = openTextFile(filename)) {
+            return new JSONObject(br);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+        return null;
+    }
+
+    /**
+     * Opens bundled text file.
+     *
+     * @param filename file to open.
+     * @return buffered file reader.
+     */
+    private BufferedReader openTextFile(String filename) throws IOException {
+        File file = new File(filename);
+        if (file.exists()) {
+            return new BufferedReader(new FileReader(file));
+        }
+
+        InputStream inputStream = getClass().getClassLoader().getResourceAsStream(filename);
+        if (inputStream == null) {
+            throw new FileNotFoundException(filename);
+        }
+        return new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
     }
     
     private void collectInitialBalls(Tile[][] grid) {
